@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Физика 7-9 сынып: 50 есептік интерактивті тест</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold">Физика: 50 есептік онлайн тест</h1>
+                <p class="text-xs md:text-sm text-blue-100 mt-0.5">Механика тарауы бойынша базалық жаттығу есептері</p>
+            </div>
+            <div id="quickScore" class="hidden bg-blue-700 px-3 py-1.5 rounded-lg font-semibold text-sm">
+                Балл: <span id="headerScore">0</span> / 50
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-4 mt-6">
+        
+        <!-- User Info Card -->
+        <div id="studentInfoCard" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                Оқушы туралы мәлімет
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Оқушының аты-жөні <span class="text-red-500">*</span></label>
+                    <input type="text" id="fullName" placeholder="Мәселен: Асан Әлихан" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Сыныбы <span class="text-red-500">*</span></label>
+                    <input type="text" id="gradeClass" placeholder="Мәселен: 9 &quot;А&quot;" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+            </div>
+            <div id="inputError" class="hidden text-red-500 text-xs mt-3">Өтініш, тестті бастау/аяқтау үшін аты-жөніңіз бен сыныбыңызды енгізіңіз.</div>
+        </div>
+
+        <!-- Result Box (Hidden by default) -->
+        <div id="resultModal" class="hidden bg-white rounded-xl shadow-md border border-blue-100 p-6 mb-8 text-center border-t-4 border-t-blue-600">
+            <h2 class="text-2xl font-bold text-slate-800 mb-1">Тестілеу нәтижесі</h2>
+            <p id="resultStudentDetails" class="text-slate-600 text-sm mb-4"></p>
+            
+            <div class="flex justify-center items-center gap-6 my-6">
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl min-w-[120px]">
+                    <div class="text-3xl font-extrabold text-blue-600"><span id="finalScore">0</span> / 50</div>
+                    <div class="text-xs text-slate-500 mt-1 font-medium">Жиналған балл</div>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl min-w-[120px]">
+                    <div class="text-3xl font-extrabold text-emerald-600"><span id="finalPercentage">0</span>%</div>
+                    <div class="text-xs text-slate-500 mt-1 font-medium">Үлгерім көрсеткіші</div>
+                </div>
+                <div class="bg-purple-50 border border-purple-100 p-4 rounded-xl min-w-[120px]">
+                    <div class="text-3xl font-extrabold text-purple-600" id="finalGrade">-</div>
+                    <div class="text-xs text-slate-500 mt-1 font-medium">Бағасы</div>
+                </div>
+            </div>
+
+            <p class="text-sm text-slate-500 mb-6">Төменде әр есептің дұрыс немесе қате орындалғанын қарап шыға аласыз.</p>
+            
+            <button onclick="resetTest()" class="bg-slate-800 hover:bg-slate-900 text-white font-medium px-6 py-2.5 rounded-lg transition text-sm">
+                Қайта тапсыру
+            </button>
+        </div>
+
+        <!-- Questions List Container -->
+        <form id="quizForm">
+            <div id="questionsContainer" class="space-y-4"></div>
+
+            <!-- Submit Button Area -->
+            <div id="submitArea" class="mt-8 mb-12 text-center">
+                <button type="button" onclick="submitTest()" class="w-full sm:w-auto px-10 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 text-base">
+                    Тестті аяқтау және нәтижені көру
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        // 50 есептік база (құжаттардан өзгеріссіз алынған)
+        const questionsData = [
+            // 1-15: Түзусызықты бірқалыпты қозғалыс
+            {
+                q: "1. Жүйрік аттың жылдамдығы 36 км/сағ. Осы жылдамдықты м/с есебімен көрсетіңіз:",
+                options: ["А) 5 м/с", "В) 10 м/с", "С) 15 м/с", "D) 20 м/с"],
+                answer: 1
+            },
+            {
+                q: "2. Автомобиль 54 км/сағ жылдамдықпен қозғалуда. Оның жылдамдығы м/с-пен қаншаға тең?",
+                options: ["А) 10 м/с", "В) 12 м/с", "С) 15 м/с", "D) 18 м/с"],
+                answer: 2
+            },
+            {
+                q: "3. Екпінді желдің жылдамдығы 72 км/сағ Оны м/с бірлігіне айналдырыңыз:",
+                options: ["А) 15 м/с", "В) 20 м/с", "С) 25 м/с", "D) 30 м/с"],
+                answer: 1
+            },
+            {
+                q: "4. Экспресс поезд 90 км/сағ тұрақты жылдамдықпен жүреді. Оның жылдамдығы м/с-пен:",
+                options: ["А) 20 м/с", "В) 22,5 м/с", "С) 25 м/с", "D) 30 м/с"],
+                answer: 2
+            },
+            {
+                q: "5. Спорттық мотоцикл 108 км/сағ жылдамдықпен келе жатыр. СИ жүйесіндегі жылдамдығы:",
+                options: ["А) 25 м/с", "В) 30 м/с", "С) 35 м/с", "D) 40 м/с"],
+                answer: 1
+            },
+            {
+                q: "6. Аэропланның жылдамдығы 144 км/сағ. Осы жылдамдықты м/с-пен өрнектеңіз:",
+                options: ["А) 30 м/с", "В) 35 м/с", "С) 40 м/с", "D) 45 м/с"],
+                answer: 2
+            },
+            {
+                q: "7. Велосипедші 6 м/с тұрақты жылдамдықпен 10 с қозғалды. Жүрген жолы:",
+                options: ["А) 16 м", "В) 40 м", "С) 60 м", "D) 100 м"],
+                answer: 2
+            },
+            {
+                q: "8. Автомобиль 15 м/с жылдамдықпен 20 с жүрді. Оның жүрген жолы:",
+                options: ["А) 150 м", "В) 200 м", "С) 300 м", "D) 450 м"],
+                answer: 2
+            },
+            {
+                q: "9. Жайяу адам 2 м/с жылдамдықпен 1 минут (60 с) жүрді. Адамның жүрген жолы:",
+                options: ["А) 30 м", "В) 60 м", "С) 120 м", "D) 180 м"],
+                answer: 2
+            },
+            {
+                q: "10. Дене 12 м/с жылдамдықпен 5 с қозғалды. Дененің жүрген жолы:",
+                options: ["А) 50 м", "В) 60 м", "С) 70 м", "D) 80 м"],
+                answer: 1
+            },
+            {
+                q: "11. Дене 50 м жолды 10 м/с жылдамдықпен жүріп өтуге кеткен уақыты:",
+                options: ["A) 2 c", "B) 5 c", "C) 10 c", "D) 25 c"],
+                answer: 1
+            },
+            {
+                q: "12. Велосипедші 120 м арақашықтықты 4 м/с жылдамдықпен қанша уақытта жүріп өтеді?",
+                options: ["A) 20 c", "В) 30 c", "C) 40 c", "D) 50 c"],
+                answer: 1
+            },
+            {
+                q: "13. Автомобиль 900 м жолды 30 м/с жылдамдықпен өтуге қажетті уақыт:",
+                options: ["A) 30 c", "В) 40 с", "C) 45 c", "D) 60 c"],
+                answer: 0
+            },
+            {
+                q: "14. Дене координатасы x₁=2 м нүктеден x₂=10 м нүктеге қозғалды. Дененің орын ауыстыруы:",
+                options: ["А) 5 м", "В) 8 м", "С) 12 м", "D) 20 м"],
+                answer: 1
+            },
+            {
+                q: "15. Автомобиль шығысқа қарай 6 км, содан кейін солтүстікке қарай 8 км жүрді. Дененің орын ауыстыру модулі:",
+                options: ["А) 14 км", "В) 10 км", "С) 2 км", "D) 48 км"],
+                answer: 1
+            },
+
+            // 16-28: Бірқалыпты айнымалы қозғалыс және үдеу
+            {
+                q: "16. Автомобиль орнынан қозғалып, 5 с ішінде жылдамдығын 20 м/с жеткізді. Автомобильдің үдеуі:",
+                options: ["А) 2 м/с²", "В) 4 м/с²", "С) 5 м/с²", "D) 10 м/с²"],
+                answer: 1
+            },
+            {
+                q: "17. Дене 3 с ішінде жылдамдығын 6 м/с-тен 15 м/с ке дейін арттырды. Дененің үдеуі:",
+                options: ["А) 2 м/с²", "В) 3 м/с²", "С) 4 м/с²", "D) 5 м/с²"],
+                answer: 1
+            },
+            {
+                q: "18. Поезд баяулай бастап, 10 с ішінде жылдамдығын 25 м/с-тен 15 м/с-ке түсірді. Поездың үдеуі (баяулауы):",
+                options: ["А) -1 м/с²", "В) -2 м/с²", "С) -3 м/с²", "D) -4 м/с²"],
+                answer: 1
+            },
+            {
+                q: "19. Зымыранның жылдамдығы 4 с ішінде 50 м/с-тен 130 м/с- ке өсті. Үдеудің мәні:",
+                options: ["А) 15 м/с²", "В) 20 м/с²", "С) 25 м/с²", "D) 30 м/с²"],
+                answer: 2
+            },
+            {
+                q: "20. Велосипедші 8 с ішінде жылдамдығын 16 м/с- ке жеткізді (бастапқы жылдамдығы нөлге тең). Үдеуі қандай?",
+                options: ["А) 1 м/с²", "В) 2 м/с²", "С) 3 м/с²", "D) 4 м/с²"],
+                answer: 1
+            },
+            {
+                q: "21. Трамвай тежелу кезінде 5 с ішінде тоқтады (v=0). Егер бастапқы жылдамдығы 15 м/с болса, оның үдеуі:",
+                options: ["А) -2 м/с²", "В) -3 м/с²", "С) -5 м/с²", "D) -10 м/с²"],
+                answer: 1
+            },
+            {
+                q: "22. Дене тыныштық күйден (v₀=0) 2 м/с² үдеумен 4 с бойы қозғалды. Дененің соңғы жылдамдығы:",
+                options: ["А) 4 м/с", "В) 6 м/с", "С) 8 м/с", "D) 10 м/с"],
+                answer: 2
+            },
+            {
+                q: "23. Автомобиль 5 м/с жылдамдықпен келе жатып, 3 м/с² үдеумен 4 с бойы үдеді. Соңғы жылдамдығы:",
+                options: ["А) 12 м/с", "В) 15 м/с", "С) 17 м/с", "D) 20 м/с"],
+                answer: 2
+            },
+            {
+                q: "24. Бастапқы жылдамдығы 10 м/с дене 1.5 м/с² үдеумен 6 с қозғалды. Жылдамдығы қандай болды?",
+                options: ["А) 16 м/с", "В) 19 м/с", "С) 22 м/с", "D) 25 м/с"],
+                answer: 1
+            },
+            {
+                q: "25. Тыныштық күйден қозғалған мотоциклші 4 м/с² үдеумен 5 с жүрді. Оның соңғы жылдамдығы:",
+                options: ["А) 10 м/с", "В) 15 м/с", "С) 20 м/с", "D) 25 м/с"],
+                answer: 2
+            },
+            {
+                q: "26. Тыныштық күйден 2 м/с² үдеумен қозғалған дене 3 с ішінде қанша жол жүреді?",
+                options: ["А) 6 м", "В) 9 м", "С) 12 м", "D) 18 м"],
+                answer: 1
+            },
+            {
+                q: "27. Тыныштық күйден 3 м/с² үдеумен қозғалған дене қанша уақытта 18 м/с жылдамдыққа жетеді?",
+                options: ["A) 3c", "B) 5c", "C) 6c", "D) 9 c"],
+                answer: 2
+            },
+            {
+                q: "28. Автомобиль жылдамдығын 10 м/с-тен 30 м/с- ке дейін 4 м/с² үдеумен арттыру үшін қанша уақыт жұмсайды?",
+                options: ["A) 3c", "B) 4 c", "C) 5c", "D) 6 c"],
+                answer: 2
+            },
+
+            // 29-41: Еркін түсу және вертикаль лақтырылған денелер
+            {
+                q: "29. Тыныштық күйден еркін түскен дене 2 с уақыт өткенде қандай жылдамдыққа жетеді?",
+                options: ["А) 5 м/с", "В) 10 м/с", "С) 20 м/с", "D) 40 м/с"],
+                answer: 2
+            },
+            {
+                q: "30. Дене тыныштық күйден еркін құлап, 3 с ішінде Жерге жетті. Оның Жерге соғылар мезетіндегі жылдамдығы:",
+                options: ["А) 10 м/с", "В) 20 м/с", "С) 30 м/с", "D) 60 м/с"],
+                answer: 2
+            },
+            {
+                q: "31. Биіктен еркін құлаған тастың құлау уақыты 4 с. Тастың соңғы жылдамдығы:",
+                options: ["А) 20 м/с", "В) 30 м/с", "С) 40 м/с", "D) 50 м/с"],
+                answer: 2
+            },
+            {
+                q: "32. Еркін түскен дене 5 с ішінде қандай жылдамдыққа ие болады?",
+                options: ["А) 25 м/с", "В) 50 м/с", "С) 75 м/с", "D) 100 м/с"],
+                answer: 1
+            },
+            {
+                q: "33. Дене тыныштық күйден еркін түсіп жатыр. 1,5 с уақыт өткендегі жылдамдығы:",
+                options: ["A) 10 м/с", "В) 15 м/с", "С) 20 м/с", "D) 25 м/с"],
+                answer: 1
+            },
+            {
+                q: "34. Еркін түсу кезінде дене 6 с ұшты. Оның соңғы жылдамдығы қандай?",
+                options: ["А) 30 м/с", "В) 40 м/с", "С) 50 м/с", "D) 60 м/с"],
+                answer: 3
+            },
+            {
+                q: "35. Дене тыныштық күйден еркін түсіп, 2 с ішінде Жерге түсті. Түсу биіктігін табыңыз:",
+                options: ["А) 10 м", "В) 20 м", "С) 30 м", "D) 40 м"],
+                answer: 1
+            },
+            {
+                q: "36. Бала балкондан тасты еркін жіберді. Тас 3 с ішінде жерге түссе, балконның биіктігі қандай?",
+                options: ["А) 30 м", "В) 45 м", "С) 60 м", "D) 90 м"],
+                answer: 1
+            },
+            {
+                q: "37. Еркін түскен дене 4 с бойы қозғалды. Дененің құлаған биіктігі:",
+                options: ["А) 40 м", "В) 60 м", "С) 80 м", "D) 100 м"],
+                answer: 2
+            },
+            {
+                q: "38. Дене тыныштық күйден еркін құлап, 1 с ішінде қандай қашықтыққа орын ауыстырады?",
+                options: ["А) 5 м", "В) 10 м", "С) 15 м", "D) 20 м"],
+                answer: 0
+            },
+            {
+                q: "39. Еркін құлаған дене 5 с ішінде қандай биіктіктен түседі?",
+                options: ["А) 50 м", "В) 100 м", "С) 125 м", "D) 250 м"],
+                answer: 2
+            },
+            {
+                q: "40. Биіктігі 20 м балконнан тас еркін түсірілді. Тастың Жерге түсу уақыты:",
+                options: ["А) 1 с", "В) 2 c", "C) 3c", "D) 4 c"],
+                answer: 1
+            },
+            {
+                q: "41. Дене тік жоғары 20 м/с жылдамдықпен лақтырылды. Оның көтерілу уақыты (t = v₀/g):",
+                options: ["A) 1c", "B) 2c", "C) 3c", "D) 4 c"],
+                answer: 1
+            },
+
+            // 42-50: Шеңбер бойымен бірқалыпты қозғалыс
+            {
+                q: "42. Дене 10 с ішінде 20 толық айналым жасады. Айналу периоды:",
+                options: ["А) 0,5 с", "В) 2 c", "C) 5 c", "D) 200 c"],
+                answer: 0
+            },
+            {
+                q: "43. Дене 12 с ішінде 4 айналым жасаса, оның айналу периоды қаншаға тең?",
+                options: ["А) 0,33 с", "В) 3 c", "C) 48 c", "D) 8 c"],
+                answer: 1
+            },
+            {
+                q: "44. Вал 2 с ішінде 10 айналым жасайды. Оның айналу жиілігі:",
+                options: ["А) 0,2 Гц", "В) 5 Гц", "С) 12 Гц", "D) 20 Гц"],
+                answer: 1
+            },
+            {
+                q: "45. Дене 5 с ішінде 20 айналым жасаса, оның жиілігі:",
+                options: ["А) 0,25 Гц", "В) 4 Гц", "С) 15 Гц", "D) 100 Гц"],
+                answer: 1
+            },
+            {
+                q: "46. Егер дененің айналу периоды 0,2 с болса, оның айналу жиілігі:",
+                options: ["А) 2 Гц", "В) 5 Гц", "С) 10 Гц", "D) 0,2 Гц"],
+                answer: 1
+            },
+            {
+                q: "47. Бұрыштық жылдамдығы 10 рад/с, радиусы 0,2 м болатын дененің сызықтық жылдамдығы:",
+                options: ["А) 0,5 м/с", "В) 2 м/с", "С) 5 м/с", "D) 20 м/с"],
+                answer: 1
+            },
+            {
+                q: "48. Сызықтық жылдамдығы 12 м/с, радиусы 3 м шеңбер бойымен қозғалған дененің бұрыштық жылдамдығы:",
+                options: ["А) 2 рад/с", "В) 4 рад/с", "С) 6 рад/с", "D) 36 рад/с"],
+                answer: 1
+            },
+            {
+                q: "49. Радиусы 2 м шеңбер бойымен 4 м/с жылдамдықпен қозғалған дененің центрге ұмтылма үдеуі:",
+                options: ["А) 2 м/с²", "В) 4 м/с²", "С) 8 м/с²", "D) 16 м/с²"],
+                answer: 2
+            },
+            {
+                q: "50. Дене радиусы 5 м шеңбер бойымен 10 м/с жылдамдықпен айналады. Центрге ұмтылма үдеуі:",
+                options: ["А) 10 м/с²", "В) 20 м/с²", "С) 50 м/с²", "D) 100 м/с²"],
+                answer: 1
+            }
+        ];
+
+        // Render Questions
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questionsData.forEach((qItem, index) => {
+                const card = document.createElement('div');
+                card.id = `question-card-${index}`;
+                card.className = "bg-white rounded-xl shadow-sm border border-slate-200 p-5 transition hover:shadow-md";
+
+                let optionsHtml = '';
+                qItem.options.forEach((opt, optIdx) => {
+                    optionsHtml += `
+                        <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition text-sm">
+                            <input type="radio" name="q_${index}" value="${optIdx}" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                            <span class="text-slate-700 font-medium">${opt}</span>
+                        </label>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="font-semibold text-slate-800 mb-3 text-base">${qItem.q}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        ${optionsHtml}
+                    </div>
+                    <div id="feedback-${index}" class="hidden mt-3 p-3 rounded-lg text-xs font-semibold"></div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Submit Test & Calculate Results
+        function submitTest() {
+            const nameInput = document.getElementById('fullName').value.trim();
+            const gradeInput = document.getElementById('gradeClass').value.trim();
+            const inputError = document.getElementById('inputError');
+
+            if (!nameInput || !gradeInput) {
+                inputError.classList.remove('hidden');
+                document.getElementById('studentInfoCard').scrollIntoView({ behavior: 'smooth' });
+                return;
+            } else {
+                inputError.classList.add('hidden');
+            }
+
+            let score = 0;
+
+            questionsData.forEach((qItem, index) => {
+                const selected = document.querySelector(`input[name="q_${index}"]:checked`);
+                const card = document.getElementById(`question-card-${index}`);
+                const feedback = document.getElementById(`feedback-${index}`);
+
+                // Clear styling
+                card.classList.remove('border-green-500', 'border-red-500', 'bg-red-50/20', 'bg-green-50/20');
+                feedback.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+
+                if (selected) {
+                    const userAns = parseInt(selected.value);
+                    if (userAns === qItem.answer) {
+                        score++;
+                        card.classList.add('border-emerald-500', 'bg-emerald-50/20');
+                        feedback.classList.add('bg-emerald-100', 'text-emerald-800');
+                        feedback.innerText = "✓ Дұрыс белгіленген!";
+                    } else {
+                        card.classList.add('border-rose-400', 'bg-rose-50/20');
+                        feedback.classList.add('bg-rose-100', 'text-rose-800');
+                        feedback.innerText = `✗ Қате. Дұрыс жауабы: ${qItem.options[qItem.answer]}`;
+                    }
+                } else {
+                    card.classList.add('border-amber-400', 'bg-amber-50/20');
+                    feedback.classList.add('bg-amber-100', 'text-amber-800');
+                    feedback.innerText = `⚠ Белгіленбеді. Дұрыс жауабы: ${qItem.options[qItem.answer]}`;
+                }
+                feedback.classList.remove('hidden');
+            });
+
+            // Calculate percentage & grade
+            const percentage = Math.round((score / questionsData.length) * 100);
+            let grade = '2';
+            if (percentage >= 85) grade = '5 (Үздік)';
+            else if (percentage >= 65) grade = '4 (Жақсы)';
+            else if (percentage >= 40) grade = '3 (Қанағаттанарлық)';
+            else grade = '2 (Қанағаттанғысыз)';
+
+            // Update DOM
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('headerScore').innerText = score;
+            document.getElementById('quickScore').classList.remove('hidden');
+            document.getElementById('finalPercentage').innerText = percentage;
+            document.getElementById('finalGrade').innerText = grade;
+            document.getElementById('resultStudentDetails').innerText = `Оқушы: ${nameInput} | Сыныбы: ${gradeInput}`;
+
+            const resultModal = document.getElementById('resultModal');
+            resultModal.classList.remove('hidden');
+            resultModal.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Reset Test
+        function resetTest() {
+            document.getElementById('quizForm').reset();
+            document.getElementById('resultModal').classList.add('hidden');
+            document.getElementById('quickScore').classList.add('hidden');
+
+            questionsData.forEach((_, index) => {
+                const card = document.getElementById(`question-card-${index}`);
+                const feedback = document.getElementById(`feedback-${index}`);
+                card.className = "bg-white rounded-xl shadow-sm border border-slate-200 p-5 transition hover:shadow-md";
+                feedback.classList.add('hidden');
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize on Load
+        window.onload = function() {
+            renderQuestions();
+        };
+    </script>
+</body>
+</html>
